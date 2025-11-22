@@ -35,37 +35,33 @@ else
     cd "$TARGET_DIR"
 fi
 
-# 3. !!! 核心修复：自动处理 package.json !!!
+# 3. 智能修复依赖配置
 echo -e "${BLUE}>> [3/5] 智能修复依赖配置...${NC}"
-
-# 如果 package.json 不存在，说明是裸奔代码，我们需要生成一个
 if [ ! -f "package.json" ]; then
     echo -e "${YELLOW}⚠️  未检测到 package.json，正在自动生成...${NC}"
     npm init -y > /dev/null
-    
-    echo -e "${YELLOW}正在自动补全常用库 (express, axios, etc)...${NC}"
-    # 这里强制安装常用的库，以此解决 ENOENT 问题，无论用没用到都不会报错
-    npm install express axios cors node-fetch body-parser --save
+    echo -e "${YELLOW}正在自动补全常用库...${NC}"
+    # < /dev/null 阻止输入流被截断
+    npm install express axios cors node-fetch body-parser --save < /dev/null
 else
     echo -e "${GREEN}检测到配置文件，准备安装...${NC}"
 fi
 
 # 4. 安装依赖
 echo -e "${BLUE}>> [4/5] 安装/更新 NPM 依赖...${NC}"
-npm install
+# < /dev/null 是关键，防止 npm 吃掉脚本后续内容
+npm install < /dev/null
 
 # 检查 PM2
 if ! command -v pm2 &> /dev/null; then
     echo -e "${YELLOW}正在安装 PM2...${NC}"
-    npm install -g pm2
+    # 必须加 < /dev/null
+    npm install -g pm2 < /dev/null
 fi
 
 # 5. 启动服务
 echo -e "${BLUE}>> [5/5] 重启服务...${NC}"
-# 停止旧进程
 pm2 delete gemini-proxy 2>/dev/null || true
-
-# 启动新进程
 pm2 start gemini-openai-proxy.js --name "gemini-proxy" --max-memory-restart 200M
 pm2 save
 
