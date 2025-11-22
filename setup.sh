@@ -13,12 +13,9 @@ NC='\033[0m' # No Color
 # 1. 部署函数
 function deploy_project() {
     echo -e "${BLUE}>> 开始部署环境...${NC}"
-    
-    # 安装基础软件
     pkg update -y
     pkg install git nodejs -y
 
-    # 检查源码
     if [ -d "$TARGET_DIR" ]; then
         echo -e "${YELLOW}检测到项目已存在，正在更新代码...${NC}"
         cd "$TARGET_DIR"
@@ -30,15 +27,13 @@ function deploy_project() {
         cd "$TARGET_DIR"
     fi
 
-    # 安装依赖
     if [ ! -d "node_modules" ]; then
-        echo -e "${GREEN}正在安装 NPM 依赖 (耗时较长请耐心等待)...${NC}"
+        echo -e "${GREEN}正在安装 NPM 依赖...${NC}"
         npm install
     fi
     
-    # 安装 PM2
     if ! command -v pm2 &> /dev/null; then
-        echo -e "${GREEN}正在安装 PM2 进程管理器...${NC}"
+        echo -e "${GREEN}正在安装 PM2...${NC}"
         npm install -g pm2
     fi
 
@@ -56,9 +51,7 @@ function start_project() {
 
     cd "$TARGET_DIR"
     
-    # 简单检查 pm2
     if ! command -v pm2 &> /dev/null; then
-        echo -e "${YELLOW}检测到 PM2 未安装，尝试安装...${NC}"
         npm install -g pm2
     fi
 
@@ -74,24 +67,49 @@ function start_project() {
     echo -e "${GREEN}==========================================${NC}"
 }
 
-# 3. 停止函数 (额外赠送的功能)
+# 3. 停止函数
 function stop_project() {
-    pm2 stop gemini-proxy
+    pm2 stop gemini-proxy 2>/dev/null
     echo -e "${YELLOW}服务已停止${NC}"
 }
 
+# 4. 卸载函数 (新增)
+function uninstall_project() {
+    echo -e "${RED}⚠️  高能预警：这将停止服务并删除所有文件！${NC}"
+    # 这里的 read 也要加 < /dev/tty 以防万一
+    read -p "❓ 确认要卸载吗? (y/n): " confirm < /dev/tty
+    
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        echo -e "${BLUE}>> 正在清理 PM2 进程...${NC}"
+        pm2 delete gemini-proxy 2>/dev/null
+        pm2 save
+        
+        echo -e "${BLUE}>> 正在删除项目文件...${NC}"
+        rm -rf "$TARGET_DIR"
+        
+        echo -e "${GREEN}✅ 卸载完成，江湖有缘再见！${NC}"
+    else
+        echo -e "${GREEN}操作已取消${NC}"
+    fi
+}
+
 # --- 主菜单逻辑 ---
-clear
+# 强制清屏，让界面更干净
+clear 
+
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${BLUE}    Gemini Proxy 管理面板 (Termux版)      ${NC}"
 echo -e "${BLUE}    Repo: aa105132/gemini-openai-proxy    ${NC}"
 echo -e "${BLUE}==========================================${NC}"
 echo -e "请选择操作："
-echo -e "${GREEN}[1] 🚀 启动 服务 (Start)${NC}"
-echo -e "${YELLOW}[2] 🛠️  一键 部署/更新 (Deploy/Update)${NC}"
+echo -e "${GREEN}[1] 🚀 启动 服务 (Start)${NC}             - 日常使用选这个"
+echo -e "${YELLOW}[2] 🛠️  一键 部署/更新 (Deploy)${NC}      - 第一次或更新选这个"
 echo -e "${RED}[3] 🛑 停止 服务 (Stop)${NC}"
+echo -e "${RED}[4] 🗑️  卸载 服务 (Uninstall)${NC}"
 echo -e "=========================================="
-read -p "请输入数字 [1-3]: " choice
+
+# !!! 关键修复：加上 < /dev/tty !!!
+read -p "请输入数字 [1-4]: " choice < /dev/tty
 
 case $choice in
     1)
@@ -102,6 +120,9 @@ case $choice in
         ;;
     3)
         stop_project
+        ;;
+    4)
+        uninstall_project
         ;;
     *)
         echo -e "${RED}无效的选择，退出程序${NC}"
