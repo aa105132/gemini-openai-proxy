@@ -1,8 +1,17 @@
-{ 
-  "name": "gemini-proxy", 
-  "version": "1.0.0", 
-  "dependencies": { 
-    "express": "^4.19.2", 
-    "node-fetch": "^2.7.0" 
-  } 
-} 
+{
+  "name": "gemini-proxy",
+  "version": "1.0.0",
+  "description": "Gemini OpenAI Proxy",
+  "main": "gemini-openai-proxy.js",
+  "scripts": {
+    "start": "node gemini-openai-proxy.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}
