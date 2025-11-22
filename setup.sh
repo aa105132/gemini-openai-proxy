@@ -5,7 +5,8 @@ set -euo pipefail
 # --- 变量定义 ---
 TARGET_DIR="$HOME/gemini-proxy-repo"
 REPO_URL="https://github.com/aa105132/gemini-openai-proxy.git"
-ENTRY_POINT="index.js"
+# 关键修正：启动文件名已根据你的项目结构更正
+ENTRY_POINT="gemini-openai-proxy.js"
 
 # --- 美化输出 ---
 GREEN='\033[0;32m'
